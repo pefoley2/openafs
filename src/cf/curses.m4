@@ -34,10 +34,7 @@ AC_DEFUN([_OPENAFS_CURSES_GETMAXYX_XTI],
  AC_CACHE_CHECK([getmaxyx macro], [openafs_cv_curses_getmaxyx],
    [save_LIBS="$LIBS"
     LIBS="$LIBS $LIB_curses"
-    AC_TRY_LINK(_OPENAFS_CURSES_HEADERS,
-		[int mx, my; initscr(); getmaxyx(stdscr, my, mx); endwin();],
-		[openafs_cv_curses_getmaxyx=yes],
-		[openafs_cv_curses_getmaxyx=no])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([_OPENAFS_CURSES_HEADERS], [int mx, my; initscr(); getmaxyx(stdscr, my, mx); endwin();])],[openafs_cv_curses_getmaxyx=yes],[openafs_cv_curses_getmaxyx=no])
     LIBS="$save_LIBS"])
  AS_IF([test x"$openafs_cv_curses_getmaxyx" = xyes],
        [AC_DEFINE(HAVE_GETMAXYX, 1,
