@@ -1044,6 +1044,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([page_follow_link],
 				     [#include <linux/fs.h>],
 				     [page_follow_link(0,0);])
+		 AC_CHECK_LINUX_FUNC([page_follow_link_light],
+				     [#include <linux/fs.h>],
+				     [page_follow_link_light(0,0);])
 		 AC_CHECK_LINUX_FUNC([page_offset],
 				     [#include <linux/pagemap.h>],
 				     [page_offset(NULL);])
@@ -1215,7 +1218,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/mm_inline.h"; then
 		  AC_DEFINE(HAVE_MM_INLINE_H, 1, [define if you have mm_inline.h header file])
 	         fi
-		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
+		 if test "x$ac_cv_linux_func_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_page_follow_link_light" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
 		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])
 		 else
 		  AC_MSG_WARN([your kernel does not have a usable symlink cache API])
