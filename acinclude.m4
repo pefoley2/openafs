@@ -352,7 +352,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_RANLIB
 AC_PROG_YACC
-AM_PROG_LEX
+AC_PROG_LEX
 dnl if we are flex, be lex-compatible
 OPENAFS_LEX_IS_FLEX([AC_SUBST([LEX], ["$LEX -l"])])
 
