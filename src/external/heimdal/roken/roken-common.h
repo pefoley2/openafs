@@ -158,12 +158,8 @@
 #endif
 #endif
 
-#ifndef RETSIGTYPE
-#define RETSIGTYPE void
-#endif
-
 #ifndef SIG_ERR
-#define SIG_ERR ((RETSIGTYPE (*)(int))-1)
+#define SIG_ERR ((void (*)(int))-1)
 #endif
 
 /*
@@ -284,10 +280,8 @@ ROKEN_CPP_START
 
 #ifndef IRIX4 /* fix for compiler bug */
 #ifndef _WIN32
-#ifdef RETSIGTYPE
-typedef RETSIGTYPE (*SigAction)(int);
+typedef void (*SigAction)(int);
 SigAction signal(int iSig, SigAction pAction); /* BSD compatible */
-#endif
 #endif
 #endif
 

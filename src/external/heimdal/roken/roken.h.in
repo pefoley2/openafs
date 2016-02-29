@@ -136,16 +136,6 @@ typedef uint64_t           u_int64_t;
 #define UNREACHABLE(x) x
 #define UNUSED_ARGUMENT(x) ((void) x)
 
-#define RETSIGTYPE void
-
-#define VOID_RETSIGTYPE 1
-
-#ifdef VOID_RETSIGTYPE
-#define SIGRETURN(x) return
-#else
-#define SIGRETURN(x) return (RETSIGTYPE)(x)
-#endif
-
 #ifndef CPP_ONLY
 
 typedef int pid_t;
