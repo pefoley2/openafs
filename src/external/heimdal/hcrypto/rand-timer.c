@@ -49,7 +49,7 @@ static volatile int igdata;	/* Index into global data */
 static int gsize;
 
 static
-RETSIGTYPE
+void
 sigALRM(int sig)
 {
     if (igdata < gsize)
@@ -58,7 +58,6 @@ sigALRM(int sig)
 #ifndef HAVE_SIGACTION
     signal(SIGALRM, sigALRM); /* Reinstall SysV signal handler */
 #endif
-    SIGRETURN(0);
 }
 
 #ifndef HAVE_SETITIMER
@@ -79,8 +78,8 @@ pacemaker(struct timeval *tv)
 
 #ifdef HAVE_SIGACTION
 /* XXX ugly hack, should perhaps use function from roken */
-static RETSIGTYPE
-(*fake_signal(int sig, RETSIGTYPE (*f)(int)))(int)
+static void
+(*fake_signal(int sig, void (*f)(int)))(int)
 {
     struct sigaction sa, osa;
     sa.sa_handler = f;
@@ -110,10 +109,10 @@ timer_bytes(unsigned char *outdata, int size)
     return 0;
 #else /* WIN32 */
     struct itimerval tv, otv;
-    RETSIGTYPE (*osa)(int);
+    void (*osa)(int);
     int i, j;
 #ifndef HAVE_SETITIMER
-    RETSIGTYPE (*ochld)(int);
+    void (*ochld)(int);
     pid_t pid;
 #endif
 
