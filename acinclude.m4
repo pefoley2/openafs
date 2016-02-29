@@ -63,7 +63,8 @@ AH_BOTTOM([
 #undef ENABLE_REDHAT_BUILDSYS
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
 # include "redhat-fix.h"
-#endif])
+#endif
+])
 
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
@@ -305,7 +306,7 @@ AC_ARG_WITH([docbook-stylesheets],
 		 /opt/local/share/xsl/docbook-xsl],
 		[$HTML_XSL])
 	   AS_IF([test "x$DOCBOOK_STYLESHEETS" = "x"],
-		[AC_WARN([Docbook stylesheets not found; some documentation can't be built])
+		[AC_MSG_WARN(Docbook stylesheets not found; some documentation can't be built)
 	   ])
 	])
 
@@ -341,7 +342,7 @@ AC_SUBST(HAVE_DOT)
 AC_SUBST(DOT_PATH)
 
 dnl Checks for UNIX variants.
-AC_ISC_POSIX
+AC_SEARCH_LIBS([strerror],[cposix])
 
 dnl Various compiler setup.
 AC_TYPE_PID_T
@@ -1231,9 +1232,7 @@ esac
 
 AC_CACHE_CHECK([if compiler has __sync_add_and_fetch],
     [ac_cv_sync_fetch_and_add],
-    [AC_TRY_LINK(, [int var; return __sync_add_and_fetch(&var, 1);],
-		    [ac_cv_sync_fetch_and_add=yes],
-		    [ac_cv_sync_fetch_and_add=no])
+    [AC_LINK_IFELSE([AC_LANG_PROGRAM([], [int var; return __sync_add_and_fetch(&var, 1);])],[ac_cv_sync_fetch_and_add=yes],[ac_cv_sync_fetch_and_add=no])
 ])
 AS_IF([test "$ac_cv_sync_fetch_and_add" = "yes"],
       [AC_DEFINE(HAVE_SYNC_FETCH_AND_ADD, 1,
@@ -1241,11 +1240,8 @@ AS_IF([test "$ac_cv_sync_fetch_and_add" = "yes"],
 
 AC_CACHE_CHECK([if struct sockaddr has sa_len field],
     [ac_cv_sockaddr_len],
-    [AC_TRY_COMPILE( [#include <sys/types.h>
-#include <sys/socket.h>],
-                     [struct sockaddr *a; a->sa_len=0;],
-		     [ac_cv_sockaddr_len=yes],
-		     [ac_cv_sockaddr_len=no])
+    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <sys/types.h>
+#include <sys/socket.h>], [struct sockaddr *a; a->sa_len=0;])],[ac_cv_sockaddr_len=yes],[ac_cv_sockaddr_len=no])
 ])
 AS_IF([test "$ac_cv_sockaddr_len" = "yes"],
       [AC_DEFINE(STRUCT_SOCKADDR_HAS_SA_LEN, 1,
@@ -1260,7 +1256,7 @@ else
 
   dnl darwin wants it, aix hates it
   AC_MSG_CHECKING(for the useability of arpa/nameser_compat.h)
-  AC_TRY_COMPILE([
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
   #include <stdlib.h>
   #include <stdio.h>
   #include <sys/types.h>
@@ -1270,10 +1266,8 @@ else
   #include <arpa/nameser.h>
   #include <arpa/nameser_compat.h>
   #include <resolv.h>
-  ], [static int i; i = 0;],
-  [AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H, 1, [define if arpa/nameser_compat.h exists])],
-  [AC_MSG_RESULT(no)
+  ], [static int i; i = 0;])],[AC_MSG_RESULT(yes)
+   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H, 1, [define if arpa/nameser_compat.h exists])],[AC_MSG_RESULT(no)
    ])
 
   openafs_save_libs="$LIBS"
@@ -1307,14 +1301,11 @@ AC_CHECK_RESOLV_RETRANS
 
 AC_CACHE_CHECK([for setsockopt(, SOL_IP, IP_RECVERR)],
     [ac_cv_setsockopt_iprecverr],
-    [AC_TRY_COMPILE( [
+    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>],
-[int on=1;
-setsockopt(0, SOL_IP, IP_RECVERR, &on, sizeof(on));],
-	[ac_cv_setsockopt_iprecverr=yes],
-	[ac_cv_setsockopt_iprecverr=no])])
+#include <netinet/in.h>], [int on=1;
+setsockopt(0, SOL_IP, IP_RECVERR, &on, sizeof(on));])],[ac_cv_setsockopt_iprecverr=yes],[ac_cv_setsockopt_iprecverr=no])])
 
 AS_IF([test "$ac_cv_setsockopt_iprecverr" = "yes"],
       [AC_DEFINE([HAVE_SETSOCKOPT_IP_RECVERR], [1],
@@ -1791,32 +1782,40 @@ dnl Sadly, there are three different versions of pthread_setname_np.
 dnl Try to cater for all of them.
 if test "$ac_cv_func_pthread_setname_np" = "yes" ; then
     AC_MSG_CHECKING([for signature of pthread_setname_np])
-    AC_TRY_COMPILE([
-#include <pthread.h>
-#ifdef HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
-], [pthread_setname_np(pthread_self(), "test", (void *)0)], [
+    AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM([
+    #include <pthread.h>
+    #ifdef HAVE_PTHREAD_NP_H
+    #include <pthread_np.h>
+    #endif
+    ], [pthread_setname_np(pthread_self(), "test", (void *)0)])],
+    [
 	AC_MSG_RESULT([three arguments])
-	pthread_setname_np_args=3], [
-	AC_TRY_COMPILE([
-#include <pthread.h>
-#ifdef HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
-], [pthread_setname_np(pthread_self(), "test")], [
-	    AC_MSG_RESULT([two arguments])
-	    pthread_setname_np_args=2], [
-	    AC_TRY_COMPILE([
-#include <pthread.h>
-#ifdef HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
-], [pthread_setname_np("test")], [
-		AC_MSG_RESULT([one argument])
-		pthread_setname_np_args=1], [pthread_setname_np_args=0])
-])
-])
+	pthread_setname_np_args=3],
+    [
+	AC_COMPILE_IFELSE(
+	[AC_LANG_PROGRAM([
+      #include <pthread.h>
+      #ifdef HAVE_PTHREAD_NP_H
+      #include <pthread_np.h>
+      #endif
+      ], [pthread_setname_np(pthread_self(), "test")])],
+    [
+	  AC_MSG_RESULT([two arguments])
+	  pthread_setname_np_args=2],
+    [
+	AC_COMPILE_IFELSE(
+	[AC_LANG_PROGRAM([
+	#include <pthread.h>
+	#ifdef HAVE_PTHREAD_NP_H
+	#include <pthread_np.h>
+	#endif
+	], [pthread_setname_np("test")])],
+      [
+	AC_MSG_RESULT([one argument])
+	pthread_setname_np_args=1],
+      [pthread_setname_np_args=0])]
+      )])
 AC_DEFINE_UNQUOTED([PTHREAD_SETNAME_NP_ARGS], $pthread_setname_np_args, [Number of arguments required by pthread_setname_np() function])
 fi
 LIBS="$save_LIBS"
@@ -1824,7 +1823,18 @@ LIBS="$save_LIBS"
 openafs_cv_saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $XCFLAGS_NOCHECKING"
 
-AC_TYPE_SIGNAL
+AC_DIAGNOSE([obsolete],[your code may safely assume C89 semantics that RETSIGTYPE is void.
+Remove this warning and the `AC_CACHE_CHECK' when you adjust the code.])dnl
+AC_CACHE_CHECK([return type of signal handlers],[ac_cv_type_signal],[AC_COMPILE_IFELSE(
+[AC_LANG_PROGRAM([#include <sys/types.h>
+#include <signal.h>
+],
+		 [return *(signal (0, 0)) (0) == 1;])],
+		   [ac_cv_type_signal=int],
+		   [ac_cv_type_signal=void])])
+AC_DEFINE_UNQUOTED([RETSIGTYPE],[$ac_cv_type_signal],[Define as the return type of signal handlers
+		    (`int' or `void').])
+
 OPENAFS_RETSIGTYPE
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(unsigned long long)
@@ -1870,7 +1880,7 @@ AC_CHECK_TYPES([struct addrinfo], [], [], [
 ])
 AC_CHECK_TYPES([long long], [], [], [])
 
-AC_SIZEOF_TYPE(long)
+AC_CHECK_SIZEOF([long])
 
 CFLAGS="$openafs_cv_saved_CFLAGS"
 
@@ -2004,28 +2014,25 @@ AC_SUBST(LIB_crypt)
 
 dnl Check to see if the compiler support labels in structs
 AC_MSG_CHECKING(for label support in structs)
-AC_TRY_COMPILE([], [
-extern void osi_UFSOpen(void);
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([extern void osi_UFSOpen(void);], [
 struct labeltest {
    void (*open) (void);
 };
 struct labeltest struct_labeltest = {
    .open       = osi_UFSOpen,
 }
-],
-[AC_MSG_RESULT(yes)
+])],[AC_MSG_RESULT(yes)
  AC_DEFINE(HAVE_STRUCT_LABEL_SUPPORT, 1, [Define to 1 if your compiler supports labels in structs.])
-],
-[AC_MSG_RESULT(no)
+],[AC_MSG_RESULT(no)
 ])
 
 AC_MSG_CHECKING([checking for dirfd])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
+AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <sys/types.h>
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
 #endif
-]],
-        [[DIR *d = 0; dirfd(d);]])],
+],
+	[DIR *d = 0; dirfd(d);])],
         [ac_rk_have_dirfd=yes], [ac_rk_have_dirfd=no])
 if test "$ac_rk_have_dirfd" = "yes" ; then
         AC_DEFINE_UNQUOTED(HAVE_DIRFD, 1, [have a dirfd function/macro])
