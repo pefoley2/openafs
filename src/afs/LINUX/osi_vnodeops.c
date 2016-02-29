@@ -699,7 +699,11 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
         (cmd == F_SETLK || cmd == F_SETLKW)) {
 	flp->fl_flags &=~ FL_SLEEP;
+# if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,0)
+	code = locks_lock_inode_wait(file_inode(fp), flp);
+#else
 	code = flock_lock_file_wait(fp, flp);
+#endif
 	if (code && flp->fl_type != F_UNLCK) {
 	    struct AFS_FLOCK flock2;
 	    flock2 = flock;

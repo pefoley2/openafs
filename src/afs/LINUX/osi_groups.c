@@ -17,6 +17,7 @@
 #include "afs/param.h"
 #ifdef LINUX_KEYRING_SUPPORT
 #include <linux/seq_file.h>
+#include <keys/user-type.h>
 #endif
 
 
@@ -489,7 +490,11 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     if (*userpag != pag)
 	goto error;
 
+# if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,0)
+    key->payload.data[0] = userpag;
+#else
     key->payload.value = (unsigned long) *userpag;
+#endif
     key->datalen = sizeof(afs_uint32);
     code = 0;
 
@@ -513,7 +518,11 @@ static int afs_pag_match(const struct key *key, const void *description)
 
 static void afs_pag_destroy(struct key *key)
 {
+# if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,0)
+    afs_uint32 pag = user_key_payload(key)->data[0];
+#else
     afs_uint32 pag = key->payload.value;
+#endif
     int locked = ISAFS_GLOCK();
 
     if (!locked)
@@ -609,7 +618,11 @@ osi_get_keyring_pag(afs_ucred_t *cred)
 
 	if (!IS_ERR(key)) {
 	    if (key_validate(key) == 0 && uid_eq(key->uid, GLOBAL_ROOT_UID)) {      /* also verify in the session keyring? */
+# if LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,0)
+		keyring_pag = user_key_payload(key)->data[0];
+#else
 		keyring_pag = key->payload.value;
+#endif
 		/* Only set PAG in groups if needed,
 		 * and the creds are from the current process */
 		if (afs_linux_cred_is_current(cred) &&
