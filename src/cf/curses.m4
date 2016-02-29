@@ -55,7 +55,7 @@ AC_DEFUN([_OPENAFS_CURSES_GETMAXYX_BSD43],
  dnl possibly this may need to be done as above in some cases?
  AC_CHECK_FUNCS([getmaxx getmaxy], [], [_openafs_curses_bsd43=no])
  LIBS="$save_LIBS"
- AS_IF([$_openafs_curses_bsd43 = yes], [$1], [$2])])
+ AS_IF([test "x$_openafs_curses_bsd43" = xyes], [$1], [$2])])
 
 dnl _OPENAFS_CURSES_GETMAXYX_BSDVI([ACTION-IF-SUCCESS], [ACTION_IF_FAILURE])
 dnl test for getmaxx() and getmaxy() as from BSD curses as bodily ripped
@@ -68,7 +68,7 @@ AC_DEFUN([_OPENAFS_CURSES_GETMAXYX_BSDVI],
  AC_CHECK_MEMBERS([WINDOW._maxx WINDOW._maxy], [], [_openafs_curses_bsdvi=no],
 		  _OPENAFS_CURSES_HEADERS)
  LIBS="$save_LIBS"
- AS_IF([$_openafs_curses_bsdvi = yes], [$1], [$2])])
+ AS_IF([test "x$_openafs_curses_bsdvi" = xyes], [$1], [$2])])
 
 dnl OPENAFS_CURSES_WINDOW_EXTENTS([ACTION-IF-SUCCESS], [ACTION_IF_FAILURE])
 dnl check for standard getmaxyx macro. failing that, try the
